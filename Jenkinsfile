@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    stages {
+        // Stage 1: Obtener el Código Fuente y Configuración
+        stage('Get Code') {
+            steps {
+                script {
+                    // Clonar el código fuente
+                    git branch: 'develop', credentialsId: 'unirCP1b', url: 'https://github.com/julianxttecn05/todo-list-aws.git'
+
+                    // Descargar `samconfig.toml` de la rama `staging`
+                    sh '''
+                    rm -rf todo-list-aws-config
+                    git clone -b staging https://github.com/julianxttecn05/todo-list-aws-config.git
+                    cp todo-list-aws-config/samconfig.toml .
+                    rm -rf todo-list-aws-config
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs() // Limpia el workspace después de ejecutar el pipeline
+        }
+        failure {
+            echo 'Pipeline CI Failed! Please check the logs.'
+        }
+    }
+}
