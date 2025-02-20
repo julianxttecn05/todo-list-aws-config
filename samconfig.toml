@@ -1,18 +1,5 @@
 version = 0.1
 
-[default]
-[default.deploy]
-[default.deploy.parameters]
-stack_name = "todo-list-aws"
-s3_bucket = "cp1-d-julian-sanchez-alcazar"
-s3_prefix = "todo-list-aws"
-region = "us-east-1"
-capabilities = "CAPABILITY_IAM"
-resolve_s3 = false  # Especificamos el bucket manualmente
-confirm_changeset = false
-allow_no_authentication = true
-disable_rollback = false
-
 [staging]
 [staging.deploy]
 [staging.deploy.parameters]
@@ -26,18 +13,6 @@ confirm_changeset = false
 allow_no_authentication = true
 disable_rollback = false
 
-[production]
-[production.deploy]
-[production.deploy.parameters]
-stack_name = "todo-list-aws-production"
-s3_bucket = "cp1-d-julian-sanchez-alcazar"
-s3_prefix = "todo-list-aws-production"
-region = "us-east-1"
-capabilities = "CAPABILITY_IAM"
-resolve_s3 = false  # Especificamos el bucket manualmente
-confirm_changeset = false
-allow_no_authentication = true
-disable_rollback = false
 
 
 
