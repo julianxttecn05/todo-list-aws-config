@@ -12,6 +12,7 @@ resolve_s3 = true
 confirm_changeset = false
 allow_no_authentication = true
 disable_rollback = false
+parameter_overrides = "DynamoDBTable=EXISTING"
 
 
 
