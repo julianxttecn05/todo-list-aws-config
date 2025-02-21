@@ -5,7 +5,7 @@ Description: >
 
   Application TODO-LIST with SAM format
 
-# Parameters
+#  Parámetros globales
 Parameters:
   Stage:
     Type: String
@@ -16,7 +16,15 @@ Parameters:
       - production
     Description: Enter staging or production. Default is default  
 
+  DynamoDBTable:
+    Type: String
+    Default: "EXISTING"
+    AllowedValues:
+      - "EXISTING"
+      - "CREATE_NEW"
+    Description: "Determina si se crea una nueva tabla DynamoDB o se usa una existente"
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+
 Globals:
   Function:
     Timeout: 3
@@ -93,11 +101,11 @@ Resources:
             Path: /todos/{id}
             Method: delete
             
-  TodosDynamoDbTable:
-    Condition: CreateTableCondition
+TodosDynamoDbTable:
     Type: AWS::DynamoDB::Table
+    Condition: CreateTableCondition
     Properties:
-      TableName: !Ref DynamoDBTable
+      TableName: !Sub "${DynamoDBTable}"  # Permite usar un nombre existente o crear uno nuevo
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -107,7 +115,7 @@ Resources:
           KeyType: HASH
 
 Conditions:
-  CreateTableCondition: !Equals [!Ref DynamoDBTable, "CREATE_NEW"]
+    CreateTableCondition: !Equals [!Ref DynamoDBTable, "CREATE_NEW"]
 
 
 Outputs:
