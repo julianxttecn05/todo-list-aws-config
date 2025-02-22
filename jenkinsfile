@@ -1,0 +1,91 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = "us-east-1"
+        STACK_NAME = "todo-list-aws-production"
+        S3_BUCKET = "cp1-d-julian-sanchez-alcazar"
+        CONFIG_FILE = "samconfig.toml"
+        TEMPLATE_FILE = "template.yaml"
+        CODE_REPO = "https://github.com/julianxttecn05/todo-list-aws.git"
+        CONFIG_REPO = "https://github.com/julianxttecn05/todo-list-aws-config.git"
+        BRANCH_NAME = "production"  // Definir el branch como variable
+    }
+
+    stages {
+        stage('Get Code') {
+            steps {
+                script {
+                    echo "Limpiando workspace..."
+                    cleanWs()
+
+                    echo "Clonando código fuente desde el branch $BRANCH_NAME..."
+                    sh 'git clone -b $BRANCH_NAME $CODE_REPO app-source' // ✅ Se asegura de usar el branch `production`
+                    sh 'git clone -b production $CONFIG_REPO app-config'
+
+                    echo "Copiando archivos necesarios..."
+                    sh 'cp app-config/samconfig.toml .'
+                    sh 'cp app-config/template.yaml .'
+                    sh 'rm -rf app-config'
+
+                    echo "Verificando si src/ existe..."
+                    sh 'ls -l app-source/ || true'
+
+                    sh 'mv app-source/src . || true'  // Mover el directorio src al workspace
+
+                    echo "Verificando archivos en el workspace..."
+                    sh 'ls -l'
+
+                    // Verificar si requirements.txt existe antes de continuar
+                    sh '[ -f src/requirements.txt ] && echo "requirements.txt encontrado" || echo "⚠️ WARNING: No se encontró requirements.txt"'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    echo "Ejecutando SAM Build..."
+                    sh 'sam build --template-file template.yaml'
+                }
+            }
+        }
+
+        stage('Validate Deployment') {
+            steps {
+                script {
+                    echo "Validando plantilla de SAM..."
+                    sh 'sam validate --region $AWS_REGION'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    echo "Ejecutando SAM Deploy..."
+                    sh '''
+                    sam deploy --stack-name $STACK_NAME \
+                    --config-file $CONFIG_FILE \
+                    --s3-bucket $S3_BUCKET \
+                    --no-confirm-changeset \
+                    --region $AWS_REGION
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Despliegue exitoso en AWS!"
+        }
+        failure {
+            echo "Error en el pipeline CD. Verifica los logs."
+        }
+        always {
+            echo "Limpiando workspace..."
+            cleanWs()
+        }
+    }
+}
